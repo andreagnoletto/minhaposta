@@ -1,0 +1,7 @@
+<nav class="aprenda-nav loterias-nav" aria-label="Páginas da seção Loterias">
+  <a href="{% url 'loterias:index' %}"{% if current == "index" %} aria-current="page"{% endif %}>Todas as loterias</a>
+  <a href="{% url 'loterias:legal' %}"{% if current == "legal" %} aria-current="page"{% endif %}>Como apostar de verdade</a>
+  {% for item in nav_lotteries %}
+    <a href="{% url 'loterias:detail' item.slug %}"{% if current == item.slug %} aria-current="page"{% endif %}>{{ item.name }}</a>
+  {% endfor %}
+</nav>

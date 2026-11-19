@@ -5,6 +5,7 @@ from django.shortcuts import render
 
 from bicho import rules
 from casino import dice, roulette, slots
+from loterias import catalog as loterias_catalog
 from wallet.charts import polyline
 
 from .forms import SimulationForm
@@ -55,6 +56,17 @@ def comparative_rows() -> list[dict]:
             "multiplier": dice.MULTIPLIER,
             "fair": dice.FACES,
             "edge_pct": float(dice.house_edge() * 100),
+        }
+    )
+    mega = loterias_catalog.get("megasena")
+    rows.append(
+        {
+            "game": "Mega-Sena (Caixa)",
+            "bet": "Aposta mínima, todas as faixas",
+            "probability": None,
+            "multiplier": None,
+            "fair": None,
+            "edge_pct": float(mega.house_share),
         }
     )
     return sorted(rows, key=lambda row: row["edge_pct"])

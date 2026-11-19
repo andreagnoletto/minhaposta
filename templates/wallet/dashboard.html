@@ -35,6 +35,7 @@
 <section class="pule" aria-labelledby="teoria-titulo">
   <h2 id="teoria-titulo">Teoria × prática</h2>
   {% if theory.settled_staked %}
+  <div class="tabela-rolagem">
   <table class="dados">
     <tbody>
       <tr><td>Apostado em rodadas já decididas</td><td class="num">F$ {{ theory.settled_staked|floatformat:2 }}</td></tr>
@@ -42,6 +43,7 @@
       <tr class="destaque"><td>O que você recebeu de volta</td><td class="num">F$ {{ theory.actual_return|floatformat:2 }} ({{ theory.actual_rate|floatformat:3 }} por ficha)</td></tr>
     </tbody>
   </table>
+  </div>
   {% if theory.actual_return > theory.expected_return %}
     <p class="destaque-texto">Por enquanto você está acima do previsto. Isso é normal em poucas apostas: a sorte manda no curto prazo. Quanto mais rodadas, mais o seu resultado se aproxima da linha da teoria, que fica abaixo de 1 ficha por ficha.</p>
   {% else %}

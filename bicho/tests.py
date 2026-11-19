@@ -167,6 +167,27 @@ class ServiceTests(TestCase):
         payout_tx = self.wallet.transactions.filter(kind="PAYOUT").get()
         self.assertEqual(payout_tx.amount, Decimal("60"))
         self.assertEqual(payout_tx.game, "BICHO")
+        next_bet = services.place_bet(
+            self.user, Modality.GRUPO, Position.CABECA, "01", Decimal("1")
+        )
+        self.assertEqual(next_bet.draw.number, draw.number + 1)
+        self.assertEqual(next_bet.draw.status, Draw.Status.OPEN)
+
+    def test_repeated_draw_does_not_settle_previous_bets_twice(self):
+        services.place_bet(
+            self.user, Modality.DEZENA, Position.CABECA, "34", Decimal("1")
+        )
+
+        first = services.run_draw(["1234", "0000", "0000", "0000", "0000"])
+        balance_after_first_draw = wallet_services.get_wallet(self.user).balance
+        second = services.run_draw(["1234", "0000", "0000", "0000", "0000"])
+
+        self.assertEqual(first.status, Draw.Status.CLOSED)
+        self.assertEqual(second.number, first.number + 1)
+        self.assertEqual(wallet_services.get_wallet(self.user).balance, balance_after_first_draw)
+        self.assertEqual(
+            self.wallet.transactions.filter(kind="PAYOUT", game="BICHO").count(), 1
+        )
 
     def test_run_draw_without_bets(self):
         draw = services.run_draw()
@@ -248,7 +269,7 @@ class ViewTests(TestCase):
         self.client.force_login(self.user)
         self.client.post(reverse("bicho:index"), self.valid)
         r = self.client.post(reverse("bicho:draw"))
-        self.assertRedirects(r, f"{reverse('bicho:index')}?sorteio=1")
+        self.assertRedirects(r, f"{reverse('bicho:index')}?sorteio=1#poste")
         self.assertEqual(Draw.objects.filter(status=Draw.Status.CLOSED).count(), 1)
         self.assertEqual(Bet.objects.get().status in {Bet.Status.WON, Bet.Status.LOST}, True)
         r = self.client.get(reverse("bicho:index"))

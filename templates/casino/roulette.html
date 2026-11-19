@@ -5,8 +5,8 @@
 <p class="capa-texto">Trinta e seis números pagam como se a roda tivesse trinta e seis casas. Mas ela tem trinta e sete: o zero. Essa casa verde é a vantagem da banca, {{ house_edge_pct|floatformat:1 }}% de tudo que é apostado, em qualquer tipo de aposta.</p>
 
 {% if result %}
+{{ wheel|json_script:"roleta-ordem" }}
 <section class="resultado feltro" aria-live="polite">
-  {{ wheel|json_script:"roleta-ordem" }}
   <div class="roleta-palco">
     <div class="roleta-roda" data-roleta="{{ result.details.number }}">
       <div class="roda-ponteiro" aria-hidden="true"></div>
@@ -32,7 +32,7 @@
     <h2 id="mesa-titulo" class="letreiro letreiro-medio">A mesa</h2>
     <div class="roleta-mesa" role="group" aria-label="Números da roleta">
       {% for number, cor in board %}
-        <button type="button" class="casa casa-{{ cor }}" data-numero="{{ number }}" aria-pressed="false">{{ number }}</button>
+        <button type="button" class="casa casa-{{ cor }}" data-numero="{{ number }}" aria-pressed="false" aria-label="{{ number }}, {{ cor }}">{{ number }}</button>
       {% endfor %}
     </div>
     <p class="capa-texto ajuda" style="color: var(--papel)">Clique num número para apostar nele. Colunas: a 1ª tem 1, 4, 7…; a 2ª tem 2, 5, 8…; a 3ª tem 3, 6, 9…</p>

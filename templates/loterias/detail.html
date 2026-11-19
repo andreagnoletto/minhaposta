@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}{{ lottery.name }}{% endblock %}
+{% block content %}
+<h1 class="letreiro">{{ lottery.name }}</h1>
+{% include "loterias/_nav.html" with current=lottery.slug %}
+<p class="capa-texto">{{ lottery.tagline }}</p>
+
+<div class="duas-colunas">
+  <section class="pule" aria-labelledby="regras-titulo">
+    <h2 id="regras-titulo">Como funciona</h2>
+    <ul class="lista-simples">
+      {% for item in lottery.how_to %}<li>{{ item }}</li>{% endfor %}
+    </ul>
+    <dl class="ficha">
+      <div><dt>Aposta mínima</dt><dd class="mono">R$ {{ lottery.price|floatformat:2 }}</dd></div>
+      <div><dt>Sorteios</dt><dd>{{ lottery.draw_days }}</dd></div>
+      <div><dt>Vira prêmio bruto</dt><dd class="mono">{{ lottery.prize_share|floatformat:2 }}% da arrecadação</dd></div>
+      <div><dt>Fica com a Caixa e o governo</dt><dd class="mono banca-leva">{{ lottery.house_share|floatformat:2 }}%</dd></div>
+    </dl>
+    <p class="ajuda">Conferido na página oficial em {{ checked_on }}. <a href="{{ lottery.official_url }}" rel="noopener">Regulamento completo na Caixa</a>.</p>
+  </section>
+
+  <section class="pule" aria-labelledby="resultado-titulo">
+    <h2 id="resultado-titulo">Último resultado</h2>
+    {% include "loterias/_result.html" with result=result lottery=lottery %}
+  </section>
+</div>
+
+{% if table %}
+<section class="pule" aria-labelledby="chances-titulo">
+  <h2 id="chances-titulo">Suas chances na aposta mínima</h2>
+  <div class="tabela-rolagem">
+  <table class="dados">
+    <thead><tr><th>Faixa</th><th class="num">Chance</th><th>Como paga</th><th class="num">Último rateio</th></tr></thead>
+    <tbody>
+    {% for row in table %}
+      <tr>
+        <td>{{ row.label }}</td>
+        <td class="num">1 em {{ row.one_in_label }}</td>
+        <td>{{ row.share }}</td>
+        <td class="num">{% if result %}{% for tier in result.tiers %}{% if tier.label == row.label %}{% if tier.prize %}R$ {{ tier.prize|floatformat:"2g" }} <span class="ajuda">({{ tier.winners }} ganhador{{ tier.winners|pluralize:"es" }})</span>{% else %}ninguém ({{ tier.winners }}){% endif %}{% endif %}{% endfor %}{% else %}—{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p>Chance de ganhar qualquer coisa com uma aposta: <strong class="mono">1 em {{ any_prize_label }}</strong>.
+  {% if combinations %}Existem <span class="mono">{{ combinations|floatformat:"0g" }}</span> apostas mínimas diferentes; comprar todas custaria <strong class="mono">R$ {{ cost_all|floatformat:"2g" }}</strong>{% if result and result.next_estimate %}, contra um prêmio estimado de R$ {{ result.next_estimate|floatformat:"0g" }}{% endif %}.{% endif %}</p>
+  <p class="ajuda">As chances são calculadas pela distribuição hipergeométrica (ou binomial, no Super Sete) a partir das regras do volante; batem com a tabela oficial da Caixa. O prêmio das faixas percentuais depende da arrecadação e é dividido entre os acertadores, por isso o valor muda a cada concurso.</p>
+</section>
+{% endif %}
+
+{% if lottery.playable %}
+<section class="pule" aria-labelledby="treino-titulo">
+  <h2 id="treino-titulo">Bilhete de treino</h2>
+  <p>Marque um volante como na lotérica. Registrar custa <strong class="mono">F$ {{ lottery.price|floatformat:2 }}</strong> em fichas fictícias (o preço real em reais) e vale para o próximo concurso{% if result and result.next_contest %}, o nº <span class="mono">{{ result.next_contest }}</span>{% if result.next_date %} de {{ result.next_date|date:"d/m/Y" }}{% endif %}{% endif %}. Depois do sorteio, o bilhete é conferido contra as dezenas oficiais e recebe, em F$, o valor que a Caixa pagou naquela faixa. Ou só confira a marcação contra o último sorteio, de graça.</p>
+  {% if lottery.note %}<p class="ajuda">{{ lottery.note }}</p>{% endif %}
+
+  {% if quick %}
+    <div class="resultado-rapido" aria-live="polite">
+      <p><strong>Contra o concurso nº {{ result.contest }}:</strong> {{ quick.hits }} acerto{{ quick.hits|pluralize }}{% if lottery.second_draw %} no 1º sorteio e {{ quick.second_hits }} no 2º{% endif %}{% if lottery.extra and lottery.extra.playable %}, {{ quick.extra_hits }} no {{ lottery.extra.label|lower }}{% endif %}.
+      {% if quick.tiers %}<span class="carimbo carimbo-ganhou">{{ quick.tiers|join:" + " }}</span> Teria recebido <strong class="mono">R$ {{ quick.payout|floatformat:"2g" }}</strong>{% if quick.jackpot_alone %} (ninguém acertou de verdade: você levaria o acumulado sozinho){% endif %}.
+      {% else %}<span class="carimbo carimbo-perdeu">Nada</span> Os R$ {{ lottery.price|floatformat:2 }} teriam ficado com a Caixa.{% endif %}</p>
+    </div>
+  {% endif %}
+
+  <form method="post" class="volante-form" id="bilhete" novalidate tabindex="-1">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<ul class="erro-lista" role="alert">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    {% if lottery.kind == "colunas" %}
+      <div class="volante-colunas" data-volante data-picks="{{ lottery.columns }}">
+        {% for column in form.columns %}
+          <fieldset class="coluna">
+            <legend>{{ column.label }}</legend>
+            <div class="coluna-casas">
+              {% for radio in column %}<label class="casa-volante">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>{% endfor %}
+            </div>
+          </fieldset>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="rotulo">Marque {{ lottery.picks }} números <span class="contador" data-contador aria-live="polite"></span></p>
+      <div class="volante" data-volante data-picks="{{ lottery.picks }}" style="--colunas: {% if lottery.pool <= 25 %}5{% else %}10{% endif %}">
+        {% for checkbox in form.n %}<label class="casa-volante">{{ checkbox.tag }}<span>{{ checkbox.choice_label }}</span></label>{% endfor %}
+      </div>
+    {% endif %}
+    {% if form.extra %}
+      <div class="campo campo-extra">
+        <label for="{{ form.extra.id_for_label }}">{{ form.extra.label }}</label>
+        {% if lottery.extra.options %}
+          {{ form.extra }}
+        {% else %}
+          <div class="volante volante-extra" style="--colunas: {{ lottery.extra.pool }}">
+            {% for checkbox in form.extra %}<label class="casa-volante casa-extra">{{ checkbox.tag }}<span>{{ checkbox.choice_label }}</span></label>{% endfor %}
+          </div>
+          <p class="ajuda">Escolha {{ lottery.extra.picks }}.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+    <p class="acoes">
+      {% if user.is_authenticated %}
+        <button type="submit" name="acao" value="registrar" class="botao">Registrar para o próximo concurso (F$ {{ lottery.price|floatformat:2 }})</button>
+        <button type="submit" name="acao" value="surpresinha" class="botao botao-linha">Surpresinha (F$ {{ lottery.price|floatformat:2 }})</button>
+      {% else %}
+        <a class="botao" href="{% url 'login' %}?next={{ request.path }}">Entre para registrar um bilhete</a>
+      {% endif %}
+      <button type="submit" name="acao" value="conferir" class="botao botao-linha">Só conferir no último sorteio</button>
+    </p>
+  </form>
+
+  {% if my_tickets %}
+    <h3>Meus bilhetes de {{ lottery.name }}</h3>
+    <div class="tabela-rolagem">
+    <table class="dados">
+      <thead><tr><th>Concurso</th><th>Marcação</th><th class="num">Custou</th><th>Situação</th><th>Acertos</th><th class="num">Prêmio</th></tr></thead>
+      <tbody>
+      {% for ticket in my_tickets %}
+        <tr>
+          <td class="mono">nº {{ ticket.contest }}</td>
+          <td class="mono">{{ ticket.numbers_label }}{% if ticket.extra_label %} + {{ ticket.extra_label }}{% endif %}</td>
+          <td class="num">F$ {{ ticket.stake|floatformat:2 }}</td>
+          <td>
+            {% if ticket.status == "WON" %}<span class="carimbo carimbo-ganhou">Premiado</span>
+            {% elif ticket.status == "LOST" %}<span class="carimbo carimbo-perdeu">Não premiado</span>
+            {% else %}<span class="carimbo carimbo-pendente">Aguardando sorteio</span>{% endif %}
+          </td>
+          <td>{{ ticket.hits_label|default:"—" }}{% if ticket.tiers %} <span class="ajuda">({{ ticket.tiers|join:", " }})</span>{% endif %}</td>
+          <td class="num">{% if ticket.payout %}F$ {{ ticket.payout|floatformat:"2g" }}{% else %}—{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  {% endif %}
+</section>
+{% else %}
+<section class="pule" aria-labelledby="sem-treino-titulo">
+  <h2 id="sem-treino-titulo">Sem bilhete de treino aqui</h2>
+  <p>{% if lottery.kind == "bilhete" %}Na Loteria Federal não há números para marcar: o bilhete já vem numerado, e a chance de cada prêmio depende de quantos bilhetes a extração emite.{% else %}Na Loteca o resultado depende de 14 partidas de futebol, não de um sorteio: a probabilidade não é só combinatória, é palpite esportivo.{% endif %} Veja <a href="{% url 'loterias:legal' %}">como apostar de verdade</a>.</p>
+</section>
+{% endif %}
+
+<section class="pule" aria-labelledby="legal-titulo">
+  <h2 id="legal-titulo">Para apostar de verdade</h2>
+  <p>Só a Caixa vende apostas das loterias federais: nas lotéricas, no portal <a href="{{ online_site }}" rel="noopener">Loterias Online</a>, no app Loterias Caixa e no Internet Banking Caixa. É preciso ter 18 anos e CPF. Nenhum outro site ou aplicativo, este incluído, pode registrar a sua aposta. <a href="{% url 'loterias:legal' %}">Regras, limites e golpes a evitar</a>.</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var form = document.getElementById("bilhete");
+  if (form && form.querySelector(".erro-lista")) {
+    form.style.scrollMarginTop = "1rem";
+    form.scrollIntoView({ block: "start" });
+    form.focus({ preventScroll: true });
+  }
+  var volante = document.querySelector("[data-volante]");
+  var contador = document.querySelector("[data-contador]");
+  if (!volante || !contador) return;
+  var alvo = parseInt(volante.dataset.picks, 10);
+  var casas = Array.prototype.slice.call(volante.querySelectorAll("input[type=checkbox]"));
+  function atualizar() {
+    var marcados = volante.querySelectorAll("input:checked").length;
+    var completo = marcados === alvo;
+    contador.textContent = "(" + marcados + " de " + alvo + ")";
+    contador.classList.toggle("completo", completo);
+    contador.classList.toggle("excedido", marcados > alvo);
+    // Ao completar, as casas restantes ficam desabilitadas para impedir marcações a mais.
+    casas.forEach(function (casa) {
+      var bloquear = completo && !casa.checked;
+      casa.disabled = bloquear;
+      casa.parentNode.classList.toggle("casa-bloqueada", bloquear);
+    });
+  }
+  volante.addEventListener("change", atualizar);
+  atualizar();
+})();
+</script>
+{% endblock %}

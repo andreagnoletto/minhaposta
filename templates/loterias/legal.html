@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Como apostar de verdade nas loterias{% endblock %}
+{% block content %}
+<h1 class="letreiro">Como apostar de verdade</h1>
+{% include "loterias/_nav.html" with current="legal" %}
+
+<section class="pule">
+  <h2>Quem pode vender uma aposta de loteria</h2>
+  <p>No Brasil, explorar loteria é serviço público da União (Decreto-Lei 204/1967), e a Lei 13.756/2018 organiza as loterias federais e a destinação do dinheiro. A operação é da Caixa Econômica Federal, com exclusividade. Desde 2020, por decisão do STF, os estados também podem ter loterias próprias, mas só dentro do seu território.</p>
+  <p>Na prática isso significa que <strong>nenhum site, aplicativo ou pessoa pode intermediar a sua aposta</strong> nas loterias da Caixa. A Caixa já enviou ao Ministério Público Federal listas de sites não autorizados e avisa que, fora dos canais oficiais, não há garantia de que a aposta exista ou de que o prêmio seja pago. Este site não vende apostas: o bilhete de treino usa fichas fictícias e serve só para estudar.</p>
+</section>
+
+<section class="pule">
+  <h2>Os canais oficiais</h2>
+  <ul class="lista-simples">
+    <li><strong>Lotéricas</strong>: mais de 13 mil casas lotéricas credenciadas. É o único lugar onde se compra <em>bolão</em> oficial, com recibo de cota emitido pela Caixa.</li>
+    <li><strong>Loterias Online</strong>: <a href="{{ online_site }}" rel="noopener">loteriasonline.caixa.gov.br</a>, o portal da própria Caixa.</li>
+    <li><strong>App Loterias Caixa</strong>: nas lojas de aplicativos para Android e iOS.</li>
+    <li><strong>Internet Banking Caixa</strong>: para quem tem conta no banco.</li>
+  </ul>
+  <p>Para apostar pela internet é preciso ter <strong>18 anos ou mais</strong>, CPF regular e cadastro no portal; o pagamento é feito com cartão de crédito ou conta Caixa. Em dezembro de 2025 a Caixa baixou o valor mínimo da compra on-line de R$ 20,00 para R$ 2,50, o preço da aposta mais barata (Dia de Sorte).</p>
+  <p class="ajuda">Regras conferidas em {{ checked_on }} e sujeitas a mudança. Confirme no site da Caixa antes de apostar.</p>
+</section>
+
+<section class="pule">
+  <h2>Antes de apostar, saiba</h2>
+  <ul class="lista-simples">
+    <li><strong>Imposto</strong>: sobre o prêmio incide imposto de renda de 30%, retido na fonte, sobre a parcela que exceder a faixa de isenção da tabela mensal do IR. O valor "por ganhador" divulgado pela Caixa já é líquido.</li>
+    <li><strong>Prazo</strong>: o prêmio deve ser reclamado em até 90 dias depois do sorteio. Depois disso, o dinheiro vai para o FIES. Prêmios pequenos são pagos em qualquer lotérica; os maiores, só em agência da Caixa.</li>
+    <li><strong>Retorno</strong>: nas loterias de números, 43,79% da arrecadação vira prêmio bruto (50% na Timemania, 55% na Loteca, 60% na Federal). É o pior retorno entre os jogos deste site, e é assim por lei: o resto financia Seguridade Social, segurança pública, cultura e esporte.</li>
+    <li><strong>Bolão on-line de terceiros</strong>: bolões vendidos por sites ou influenciadores não são reconhecidos pela Caixa. Em 2025 a Justiça Federal mandou suspender a divulgação de um deles a pedido da Caixa. Se quiser dividir uma aposta, faça o bolão na lotérica e guarde o recibo da sua cota.</li>
+    <li><strong>Resultados</strong>: os resultados oficiais estão no site e no app da Caixa. Os desta seção vêm da mesma API que o portal usa, mas em caso de divergência vale o site oficial.</li>
+  </ul>
+</section>
+
+<section class="pule">
+  <h2>E as "bets" e as loterias estaduais?</h2>
+  <ul class="lista-simples">
+    <li><strong>Apostas de quota fixa</strong> (esportivas e cassino on-line): legalizadas pela Lei 14.790/2023 e autorizadas pelo Ministério da Fazenda desde 2025. Só são legais as empresas autorizadas, que operam em domínios <span class="mono">.bet.br</span>; a lista oficial é publicada pela Secretaria de Prêmios e Apostas. Têm proibição para menores, limites de depósito e autoexclusão obrigatória.</li>
+    <li><strong>Loterias estaduais</strong>: alguns estados (Rio de Janeiro, Paraíba, Minas Gerais, Paraná, entre outros) operam ou licenciam loterias próprias, válidas só para quem está no estado.</li>
+    <li><strong>Jogo do bicho, cassinos e caça-níqueis</strong>: continuam ilegais. Veja <a href="{% url 'learn:legal' %}">lei e jogo responsável</a>.</li>
+  </ul>
+</section>
+
+<section class="pule">
+  <h2>As loterias, uma a uma</h2>
+  <div class="tabela-rolagem">
+  <table class="dados">
+    <thead><tr><th>Loteria</th><th class="num">Aposta mínima</th><th>Sorteios</th><th class="num">Vira prêmio</th></tr></thead>
+    <tbody>
+    {% for lottery in lotteries %}
+      <tr>
+        <td><a href="{% url 'loterias:detail' lottery.slug %}">{{ lottery.name }}</a></td>
+        <td class="num">R$ {{ lottery.price|floatformat:2 }}</td>
+        <td>{{ lottery.draw_days }}</td>
+        <td class="num">{{ lottery.prize_share|floatformat:2 }}%</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="destaque-texto">Apostar em loteria é comprar uma chance minúscula por um preço pequeno. Não é investimento e não "acumula sorte". Se a vontade de apostar está pesando, o CVV atende pelo 188, de graça, 24 horas.</p>
+</section>
+{% endblock %}

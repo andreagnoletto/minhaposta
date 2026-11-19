@@ -10,6 +10,14 @@ from .models import Bet, Draw
 from .rules import MULTIPLIERS, Modality, Position, compute_payout, random_prizes
 
 
+def _locked_open_draw() -> Draw:
+    while True:
+        draw = Draw.current()
+        draw = Draw.objects.select_for_update().get(pk=draw.pk)
+        if draw.status == Draw.Status.OPEN:
+            return draw
+
+
 @transaction.atomic
 def place_bet(user, modality, position, pick, stake) -> Bet:
     """Debita a aposta e a registra na extração aberta.
@@ -17,7 +25,7 @@ def place_bet(user, modality, position, pick, stake) -> Bet:
     Levanta ``wallet.services.InsufficientFunds`` sem criar nada.
     """
     wallet = get_wallet(user)
-    draw = Draw.current()
+    draw = _locked_open_draw()
     position_label = "cabeça" if position == Position.CABECA else "1º ao 5º"
     debit(
         wallet,
@@ -39,7 +47,7 @@ def place_bet(user, modality, position, pick, stake) -> Bet:
 @transaction.atomic
 def run_draw(prizes: list[str] | None = None) -> Draw:
     """Encerra a extração aberta, liquida as apostas pendentes e abre a próxima."""
-    draw = Draw.current()
+    draw = _locked_open_draw()
     draw.prizes = list(prizes) if prizes else random_prizes()
     draw.status = Draw.Status.CLOSED
     draw.drawn_at = timezone.now()

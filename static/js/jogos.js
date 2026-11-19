@@ -148,6 +148,7 @@
   if (poste) {
     var premios = Array.prototype.slice.call(poste.querySelectorAll(".premio"));
     poste.scrollIntoView({ behavior: reduzir ? "auto" : "smooth", block: "center" });
+    poste.focus({ preventScroll: true });
     if (reduzir) {
       premios.forEach(function (li) { li.classList.add("revelado"); });
       revelar(poste);

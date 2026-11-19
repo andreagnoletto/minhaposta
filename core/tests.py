@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from wallet.models import Wallet
@@ -39,6 +39,15 @@ class CoreViewTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertTrue(Wallet.objects.filter(user=user).exists())
         self.assertContains(r, "1000")
+
+
+class HealthCheckTests(TestCase):
+    @override_settings(ALLOWED_HOSTS=["minhaposta.com.br"], SECURE_SSL_REDIRECT=True)
+    def test_probe_from_localhost_bypasses_host_and_https_checks(self):
+        r = self.client.get("/healthz", headers={"host": "localhost:8000"})
+        self.assertEqual((r.status_code, r.content), (200, b"ok"))
+        # sem o atalho, a mesma sonda é redirecionada para HTTPS
+        self.assertEqual(self.client.get("/", headers={"host": "minhaposta.com.br"}).status_code, 301)
 
 
 class RunserverPortTests(TestCase):

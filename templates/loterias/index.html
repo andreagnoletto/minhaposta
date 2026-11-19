@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Loterias da Caixa{% endblock %}
+{% block content %}
+<h1 class="letreiro">Loterias da Caixa</h1>
+{% include "loterias/_nav.html" with current="index" %}
+
+<section class="pule">
+  <h2>As únicas apostas de números legais no Brasil</h2>
+  <p>As loterias federais são um serviço público da União, operado com exclusividade pela Caixa Econômica Federal. Diferente da banca do bicho, aqui o prêmio é garantido e pago, mas a conta continua pesada: nas loterias de números, só <strong>43,79%</strong> do que se arrecada volta como prêmio bruto. O resto vai para Seguridade Social, fundos públicos, custeio e comissões. É a maior "vantagem da casa" deste site.</p>
+  <p>Esta seção junta, para cada loteria, as regras oficiais, o preço, a chance exata de cada faixa (calculada por combinatória, não copiada) e o último resultado oficial, atualizado periodicamente a partir da API do portal da Caixa e guardado localmente. Com uma conta você ainda registra um <strong>bilhete de treino</strong> com fichas fictícias e confere contra o sorteio real.</p>
+  <p class="destaque-texto">Este site não vende apostas nem intermedia bilhetes: nenhum terceiro pode fazer isso. Para apostar de verdade, veja <a href="{% url 'loterias:legal' %}">os canais oficiais e as regras</a>.</p>
+</section>
+
+<ul class="lista-jogos loterias-grid">
+  {% for card in cards %}
+    <li class="pule cartao-loteria">
+      <h3><a href="{% url 'loterias:detail' card.lottery.slug %}">{{ card.lottery.name }}</a></h3>
+      <p>{{ card.lottery.tagline }}</p>
+      {% include "loterias/_result.html" with result=card.result lottery=card.lottery compact=True %}
+      <dl class="ficha">
+        <div><dt>Aposta mínima</dt><dd class="mono">R$ {{ card.lottery.price|floatformat:2 }}</dd></div>
+        <div><dt>Sorteios</dt><dd>{{ card.lottery.draw_days }}</dd></div>
+        {% if card.top %}<div><dt>Chance do prêmio máximo</dt><dd class="mono">1 em {{ card.top.one_in_label }}</dd></div>{% endif %}
+        <div><dt>Vira prêmio</dt><dd class="mono">{{ card.lottery.prize_share|floatformat:2 }}% da arrecadação</dd></div>
+      </dl>
+      <p class="acoes"><a class="botao" href="{% url 'loterias:detail' card.lottery.slug %}">Regras, chances e bilhete de treino</a></p>
+    </li>
+  {% endfor %}
+</ul>
+
+{% if user.is_authenticated %}
+<section class="pule" aria-labelledby="bilhetes-titulo">
+  <h2 id="bilhetes-titulo">Meus bilhetes de treino</h2>
+  {% if tickets %}
+    <div class="tabela-rolagem">
+    <table class="dados">
+      <thead><tr><th>Loteria</th><th>Concurso</th><th>Marcação</th><th class="num">Custou</th><th>Situação</th><th>Acertos</th><th class="num">Prêmio</th></tr></thead>
+      <tbody>
+      {% for ticket in tickets %}
+        <tr>
+          <td><a href="{% url 'loterias:detail' ticket.lottery %}">{{ ticket.lottery_name }}</a></td>
+          <td class="mono">nº {{ ticket.contest }}</td>
+          <td class="mono">{{ ticket.numbers_label }}{% if ticket.extra_label %} + {{ ticket.extra_label }}{% endif %}</td>
+          <td class="num">F$ {{ ticket.stake|floatformat:2 }}</td>
+          <td>
+            {% if ticket.status == "WON" %}<span class="carimbo carimbo-ganhou">Premiado</span>
+            {% elif ticket.status == "LOST" %}<span class="carimbo carimbo-perdeu">Não premiado</span>
+            {% else %}<span class="carimbo carimbo-pendente">Aguardando sorteio</span>{% endif %}
+          </td>
+          <td>{{ ticket.hits_label|default:"—" }}</td>
+          <td class="num">{% if ticket.payout %}F$ {{ ticket.payout|floatformat:"2g" }}{% else %}—{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <p class="ajuda">Bilhetes pendentes são conferidos automaticamente quando você abre esta página depois do sorteio.</p>
+  {% else %}
+    <p>Você ainda não registrou nenhum bilhete de treino. Escolha uma loteria acima e marque um volante.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+<p class="ajuda rodape-fontes">Regras, preços e dias de sorteio conferidos nas páginas oficiais da Caixa em {{ checked_on }}; podem mudar. Resultados: API pública do portal <a href="{{ official_site }}" rel="noopener">loterias.caixa.gov.br</a>. Em caso de divergência, vale o site da Caixa.</p>
+{% endblock %}

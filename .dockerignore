@@ -1,0 +1,11 @@
+.git/
+.venv/
+**/__pycache__/
+*.pyc
+db.sqlite3
+staticfiles/
+.superpowers/
+.playwright-mcp/
+docs/
+e2e/
+requirements-dev.txt

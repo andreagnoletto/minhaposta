@@ -66,7 +66,7 @@
 </div>
 
 {% if last_draw %}
-<section class="pule poste" aria-labelledby="ultima-titulo" aria-live="polite"{% if animate_draw %} data-animar-sorteio{% endif %}>
+<section id="poste" class="pule poste" aria-labelledby="ultima-titulo" aria-live="polite" tabindex="-1"{% if animate_draw %} data-animar-sorteio{% endif %}>
   <h2 id="ultima-titulo">Deu no poste: extração nº {{ last_draw.number }}</h2>
   <ol class="premios">
     {% for prize, animal in last_draw.prize_animals %}

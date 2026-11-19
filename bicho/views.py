@@ -60,7 +60,7 @@ def draw(request):
         request,
         f"Extração nº {closed.number} sorteada, {total} aposta(s) liquidada(s). Veja o resultado no poste.",
     )
-    return redirect(f"{reverse('bicho:index')}?sorteio={closed.number}")
+    return redirect(f"{reverse('bicho:index')}?sorteio={closed.number}#poste")
 
 
 def history(request):

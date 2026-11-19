@@ -8,6 +8,7 @@ from django.views.generic import FormView, TemplateView
 from bicho.rules import ANIMALS, Modality
 from bicho.rules import house_edge as bicho_edge
 from casino import dice, roulette, slots
+from loterias import catalog as loterias_catalog
 from wallet.services import INITIAL_BONUS, get_wallet
 
 
@@ -19,6 +20,7 @@ def house_edges() -> dict[str, float]:
         "roulette": float(roulette.house_edge(roulette.BetType.RED) * 100),
         "slots": float(slots.house_edge() * 100),
         "dice": float(dice.house_edge() * 100),
+        "loterias": float(loterias_catalog.get("megasena").house_share),
     }
 
 

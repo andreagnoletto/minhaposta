@@ -5,9 +5,9 @@
 <p class="capa-texto">Três rolos com {{ reel_size }} símbolos cada. Como a máquina é aberta, dá para contar todas as {{ reel_size }} × {{ reel_size }} × {{ reel_size }} combinações e calcular o retorno exato: {{ rtp_pct|floatformat:1 }}% do que entra volta como prêmio. Os outros {{ house_edge_pct|floatformat:1 }}% ficam com a banca.</p>
 
 {% if result %}
+{{ symbol_list|json_script:"simbolos-rolo" }}
 <section class="resultado maquina" aria-live="polite">
-  {{ symbol_list|json_script:"simbolos-rolo" }}
-  <div class="maquina-painel" aria-hidden="true"><span class="maquina-luz"></span><span class="maquina-titulo">Jogo do Bixo · 3 rolos</span><span class="maquina-luz"></span></div>
+  <div class="maquina-painel" aria-hidden="true"><span class="maquina-luz"></span><span class="maquina-titulo">MINHAPOSTA.COM.BR · 3 rolos</span><span class="maquina-luz"></span></div>
   <div class="rolos" data-caca-niquel role="img" aria-label="Saiu {{ result.details.reels|join:', ' }}">
     {% for symbol in result.details.symbols %}<span class="rolo" data-final="{{ symbol }}">{{ symbol }}</span>{% endfor %}
   </div>
@@ -39,6 +39,7 @@
       <p>Para jogar, <a href="{% url 'login' %}?next={% url 'casino:slots' %}">entre</a> ou <a href="{% url 'core:signup' %}">crie uma conta</a>.</p>
     {% endif %}
     <h3>O que tem em cada rolo</h3>
+    <div class="tabela-rolagem">
     <table class="dados">
       <thead><tr><th>Símbolo</th><th class="num">Posições no rolo</th></tr></thead>
       <tbody>
@@ -47,6 +48,7 @@
       {% endfor %}
       </tbody>
     </table>
+    </div>
   </section>
 
   <section class="pule" aria-labelledby="premios-titulo">

@@ -35,6 +35,7 @@ class Transaction(models.Model):
         ROULETTE = "ROULETTE", "Roleta"
         SLOTS = "SLOTS", "Caça-níquel"
         DICE = "DICE", "Dado"
+        LOTERIA = "LOTERIA", "Loterias"
 
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name="transactions")
     kind = models.CharField("tipo", max_length=10, choices=Kind.choices)

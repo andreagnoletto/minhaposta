@@ -1,0 +1,65 @@
+{# Último resultado oficial de uma loteria. Espera `result` (DrawResult) e `lottery`; `compact` omite o rateio. #}
+{% if result %}
+  <p class="resultado-cabeca">
+    <strong>Concurso nº <span class="mono">{{ result.contest }}</span></strong>{% if result.date %}, {{ result.date|date:"d/m/Y" }}{% endif %}
+    {% if result.accumulated %}<span class="carimbo carimbo-pendente">Acumulou</span>{% endif %}
+  </p>
+  {% if result.stale %}
+    <p class="ajuda aviso-cache">Esta cópia local pode estar desatualizada; obtida em {{ result.fetched_at|date:"d/m/Y H:i" }}.</p>
+  {% endif %}
+  {% if lottery.kind == "esportiva" %}
+    {% if result.matches %}
+      <ol class="jogos-loteca">
+        {% for match in result.matches %}
+          <li><span class="time">{{ match.home }}</span> <span class="mono placar">{{ match.home_goals }} × {{ match.away_goals }}</span> <span class="time">{{ match.away }}</span></li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+  {% elif lottery.kind == "bilhete" %}
+    <ol class="bilhetes-federal">
+      {% for number in result.numbers %}<li><span class="ordem">{{ forloop.counter }}º prêmio</span> <span class="mono">{{ number }}</span></li>{% endfor %}
+    </ol>
+  {% else %}
+    <ul class="bolas" aria-label="Dezenas sorteadas">
+      {% for number in result.numbers %}<li class="bola">{{ number }}</li>{% endfor %}
+      {% for value in result.extra_values %}<li class="bola bola-extra" title="{{ lottery.extra.label }}">{{ value }}</li>{% endfor %}
+    </ul>
+    {% if result.second_numbers %}
+      <p class="ajuda">2º sorteio</p>
+      <ul class="bolas" aria-label="Dezenas do segundo sorteio">
+        {% for number in result.second_numbers %}<li class="bola bola-segunda">{{ number }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    {% if lottery.extra and result.extra_values %}<p class="ajuda">{{ lottery.extra.label }}: <strong>{{ result.extra_label }}</strong></p>{% endif %}
+  {% endif %}
+
+  {% if not compact %}
+    {% if result.tiers %}
+      <div class="tabela-rolagem">
+      <table class="dados">
+        <thead><tr><th>Faixa</th><th class="num">Ganhadores</th><th class="num">Prêmio por ganhador</th></tr></thead>
+        <tbody>
+        {% for tier in result.tiers %}
+          <tr>
+            <td>{{ tier.label }}</td>
+            <td class="num">{{ tier.winners }}</td>
+            <td class="num">{% if tier.prize %}R$ {{ tier.prize|floatformat:"2g" }}{% else %}—{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    {% endif %}
+    <p class="ajuda">
+      {% if result.collected %}Arrecadação: R$ {{ result.collected|floatformat:"2g" }}.{% endif %}
+      {% if result.location %}Sorteio em {{ result.location }}.{% endif %}
+    </p>
+  {% endif %}
+  {% if result.next_date or result.next_estimate %}
+    <p class="proximo">
+      Próximo concurso{% if result.next_contest %} nº <span class="mono">{{ result.next_contest }}</span>{% endif %}{% if result.next_date %}: {{ result.next_date|date:"d/m/Y" }}{% endif %}{% if result.next_estimate %}, prêmio estimado <strong class="mono">R$ {{ result.next_estimate|floatformat:"0g" }}</strong>{% endif %}.
+    </p>
+  {% endif %}
+{% else %}
+  <p class="ajuda">Resultado indisponível no momento. A Caixa não respondeu e ainda não há resultado guardado aqui. Consulte <a href="{{ lottery.official_url }}" rel="noopener">o site oficial</a>.</p>
+{% endif %}

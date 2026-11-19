@@ -10,7 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,13 +22,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2zd6arzpo9za-8d-&1&rofpk)3)v46)u2rtcty)hk842_p)6-i'
+def env_bool(name: str, default: bool) -> bool:
+    return os.environ.get(name, str(default)).strip().lower() in {"1", "true", "yes"}
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env_bool("DJANGO_DEBUG", True)
 
-ALLOWED_HOSTS = []
+# Production must not start with a development signing key.
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "").strip()
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured("Defina DJANGO_SECRET_KEY no ambiente de produção.")
+    SECRET_KEY = "django-insecure-development-only-set-DJANGO_SECRET_KEY-before-deploying"
+
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get(
+        "DJANGO_ALLOWED_HOSTS",
+        "localhost,127.0.0.1,minhaposta.com.br,www.minhaposta.com.br",
+    ).split(",")
+    if host.strip()
+]
 
 
 # Application definition
@@ -42,10 +60,13 @@ INSTALLED_APPS = [
     'bicho',
     'casino',
     'learn',
+    'loterias',
 ]
 
 MIDDLEWARE = [
+    'core.middleware.HealthCheckMiddleware',  # primeiro: responde antes das checagens de host e HTTPS
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -81,7 +102,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        # Em contêiner, aponte para um volume persistente (ex.: /data/db.sqlite3).
+        'NAME': os.environ.get("DJANGO_DB_PATH") or BASE_DIR / 'db.sqlite3',
         # select_for_update() não existe no SQLite; transações IMMEDIATE serializam
         # as escritas na carteira em vez de falhar com "database is locked".
         'OPTIONS': {'transaction_mode': 'IMMEDIATE'},
@@ -125,6 +147,14 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+if not DEBUG:
+    # Nomes com hash e arquivos comprimidos; exige `collectstatic` (feito no build da imagem).
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    }
 
 
 # Autenticação
@@ -138,6 +168,32 @@ LOGOUT_REDIRECT_URL = 'core:home'
 
 MAILERS = {
     'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        'BACKEND': os.environ.get(
+            "DJANGO_EMAIL_BACKEND",
+            'django.core.mail.backends.console.EmailBackend',
+        ),
     },
+}
+
+SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", not DEBUG)
+# Só ative atrás de um proxy que termina o TLS e sobrescreve X-Forwarded-Proto
+# (Traefik/Caddy do Coolify). Sem isso, o redirecionamento para HTTPS entra em laço.
+if env_bool("DJANGO_TRUST_PROXY_HEADERS", False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_HSTS_SECONDS = int(os.environ.get("DJANGO_SECURE_HSTS_SECONDS", "0"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_HSTS_SECONDS > 0
+SECURE_HSTS_PRELOAD = SECURE_HSTS_SECONDS > 0
+
+
+# Logs
+# Com DEBUG=False o Django só envia erros por e-mail aos ADMINS; aqui tudo vai
+# para o console, de onde o servidor de aplicação e a plataforma recolhem.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"simples": {"format": "{levelname} {name}: {message}", "style": "{"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simples"}},
+    "root": {"handlers": ["console"], "level": os.environ.get("DJANGO_LOG_LEVEL", "INFO")},
 }

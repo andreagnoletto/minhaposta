@@ -1,0 +1,86 @@
+/* MINHAPOSTA.COM.BR — seção Loterias da Caixa: bolas do sorteio, volante e cartões.
+   Depende dos tokens definidos em app.css. */
+
+.loterias-nav a { font-size: .85rem; padding: .3rem .6rem; }
+
+.loterias-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.cartao-loteria h3 { font-size: 1.5rem; }
+.cartao-loteria .acoes { margin: .75rem 0 0; }
+
+.resultado-cabeca { margin: .25rem 0; }
+.resultado-cabeca .carimbo { margin-left: .5rem; font-size: .95rem; padding: 0 .4rem; }
+.aviso-cache { color: var(--vermelho-escuro); }
+.proximo { margin: .5rem 0 0; }
+
+.bolas { display: flex; flex-wrap: wrap; gap: .35rem; list-style: none; padding: 0; margin: .4rem 0; }
+.bola {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.3rem; height: 2.3rem; border-radius: 50%;
+  background: var(--anil-escuro); color: var(--papel);
+  font-family: var(--mono); font-weight: 700; font-size: 1.05rem;
+  box-shadow: inset -3px -3px 0 rgba(0, 0, 0, .35), 2px 2px 0 rgba(0, 0, 0, .25);
+}
+.bola-segunda { background: var(--anil-claro); }
+.bola-extra { background: var(--vermelho); border-radius: 30%; width: auto; min-width: 2.3rem; padding: 0 .5rem; font-size: .9rem; }
+
+.jogos-loteca { padding-left: 1.4rem; margin: .4rem 0; columns: 2; column-gap: 1.5rem; font-size: .92rem; }
+.jogos-loteca li { break-inside: avoid; margin-bottom: .2rem; }
+.jogos-loteca .placar { font-weight: 700; padding: 0 .3rem; }
+.bilhetes-federal { list-style: none; padding: 0; margin: .4rem 0; display: grid; gap: .3rem; }
+.bilhetes-federal li { background: var(--branco); border: 2px solid var(--tinta); padding: .3rem .6rem; display: flex; justify-content: space-between; gap: 1rem; }
+.bilhetes-federal .ordem { font-size: .8rem; color: var(--tinta-fraca); }
+.bilhetes-federal .mono { font-weight: 700; font-size: 1.15rem; letter-spacing: .08em; }
+
+.ficha { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .5rem .9rem; margin: .75rem 0; }
+.ficha div { background: var(--papel); padding: .4rem .6rem; border-left: 4px solid var(--anil-escuro); }
+.ficha dt { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--tinta-fraca); }
+.ficha dd { margin: 0; font-weight: 700; }
+
+/* ---- Volante ---- */
+.volante-form .rotulo { font-weight: 600; margin: .5rem 0 .3rem; }
+.contador { font-weight: 400; color: var(--tinta-fraca); }
+.contador.completo { color: var(--verde); font-weight: 700; }
+.contador.excedido { color: var(--vermelho); font-weight: 700; }
+.volante {
+  display: grid; grid-template-columns: repeat(var(--colunas, 10), minmax(0, 1fr)); gap: 4px;
+  max-width: 520px; padding: 6px; background: var(--anil-escuro); border: 3px solid var(--tinta);
+}
+.volante-extra { max-width: 300px; }
+.casa-volante {
+  position: relative; display: block; text-align: center; padding: .45rem 0; cursor: pointer;
+  background: var(--branco); color: var(--tinta); border: 2px solid var(--anil-escuro);
+  font-family: var(--mono); font-weight: 700; font-size: 1rem; user-select: none;
+}
+.casa-volante input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.casa-volante:hover { background: var(--papel-claro); }
+.casa-volante:has(input:checked) { background: var(--anil-escuro); color: var(--papel); }
+.casa-volante:has(input:checked)::after {
+  content: ""; position: absolute; inset: 4px; border: 2px solid var(--papel); pointer-events: none; opacity: .6;
+}
+.casa-volante:has(input:focus-visible) { outline: 3px solid var(--vermelho); outline-offset: 1px; z-index: 1; }
+.casa-volante.casa-bloqueada { opacity: .45; cursor: not-allowed; }
+.casa-volante.casa-bloqueada:hover { background: var(--branco); }
+.casa-extra:has(input:checked) { background: var(--vermelho); }
+
+.volante-colunas { display: flex; flex-wrap: wrap; gap: 6px; }
+.volante-colunas .coluna { border: 3px solid var(--tinta); background: var(--anil-escuro); padding: 0 4px 4px; margin: 0; min-width: 0; }
+.volante-colunas legend {
+  color: var(--papel); background: var(--anil-escuro); border: 2px solid var(--tinta);
+  font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 0 .3rem;
+}
+.coluna-casas { display: grid; gap: 3px; }
+.volante-colunas .casa-volante { padding: .25rem .55rem; }
+
+.campo-extra { margin-top: 1rem; }
+.campo-extra select { font: inherit; padding: .4rem .5rem; border: 2px solid var(--tinta); background: var(--branco); }
+
+.resultado-rapido { background: var(--papel); border: 3px dashed var(--anil-escuro); padding: .75rem 1rem; margin: .75rem 0 1rem; }
+.resultado-rapido .carimbo { margin: 0 .4rem; font-size: 1rem; padding: 0 .4rem; }
+.rodape-fontes { color: var(--papel-escuro); max-width: none; margin: 1.5rem 0 0; }
+.rodape-fontes a { color: var(--papel); }
+
+@media (max-width: 760px) {
+  .jogos-loteca { columns: 1; }
+  .casa-volante { font-size: .9rem; padding: .35rem 0; }
+  .volante { gap: 3px; }
+}

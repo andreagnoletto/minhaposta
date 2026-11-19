@@ -31,7 +31,7 @@
 </section>
 
 <section class="jogos">
-  <h2 class="letreiro letreiro-medio">Quatro jogos, uma mesma lição</h2>
+  <h2 class="letreiro letreiro-medio">Cinco jogos, uma mesma lição</h2>
   <ul class="lista-jogos">
     <li class="pule">
       <h3><a href="{% url 'bicho:index' %}">Jogo do bicho</a></h3>
@@ -52,6 +52,11 @@
       <h3><a href="{% url 'casino:dice' %}">Dado</a></h3>
       <p>O exemplo mais simples: uma chance em seis de acertar, mas o prêmio paga como se fosse uma em cinco.</p>
       <p class="banca-leva-linha">Fica com a banca: <strong class="mono">{{ edges.dice|floatformat:1 }}%</strong></p>
+    </li>
+    <li class="pule">
+      <h3><a href="{% url 'loterias:index' %}">Loterias da Caixa</a></h3>
+      <p>As loterias legais do Brasil: resultados oficiais, a chance exata de cada faixa e um bilhete de treino conferido contra o sorteio de verdade.</p>
+      <p class="banca-leva-linha">Fica com a Caixa e o governo: <strong class="mono">{{ edges.loterias|floatformat:2 }}%</strong></p>
     </li>
   </ul>
 </section>
